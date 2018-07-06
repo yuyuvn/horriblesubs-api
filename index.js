@@ -309,33 +309,31 @@ module.exports = class HorribleSubsApi {
       let page = 0
 
       return pWhilst(() => busy, () => {
-        return this._get('lib/getshows.php', {
+        return this._get('api.php', {
+          method: 'getshows',
           type: 'show',
           showid: res.hs_showid,
           nextid: page
         }).then($ => {
-          const table = $('table.release-table')
+          const container = $('.rls-info-container')
 
-          if (table.length === 0) {
+          if (container.length === 0) {
             busy = false
             return data
           }
 
-          table.each(function () {
+          container.each(function () {
             const entry = $(this)
 
-            const seasonal = /(.*).[Ss](\d)\s-\s(\d+)(?:v\d)?.\[(\d{3,4}p)\]/i
-            const oneSeason = /(.*)\s-\s(\d+)(?:v\d)?.\[(\d{3,4}p)\]/i
+            const oneSeason = /(?:.*)\s(\d+)\s(?:SD)?(?:\d{3,4}p)?(?:\d{3,4}p)?/i
 
             let season = 1
             let episode
             let quality
 
-            const label = entry.find('td.dl-label').text()
-            if (seasonal.test(label)) {
-              [ , season, episode, quality ] = label.match(seasonal)
-            } else if (oneSeason.test(label)) {
-              [ , , episode, quality ] = label.match(oneSeason)
+            const label = entry.find('.rls-label').text()
+            if (oneSeason.test(label)) {
+              [, episode] = label.match(oneSeason)
             } else {
               return
             }
@@ -360,18 +358,19 @@ module.exports = class HorribleSubsApi {
               data.episodes[season][episode] = {}
             }
 
-            const magnet = entry.find('td.dl-type.hs-magnet-link')
-              .find('a')
-              .attr('href')
-
-            const torrent = {
-              url: magnet,
-              seeds: 0,
-              peers: 0,
-              provider: 'HorribleSubs'
-            }
-
-            data.episodes[season][episode][quality] = torrent
+            entry.find(".rls-links-container").each(function(){
+              const quality = $(this).find(".rls-link-label").text().trim().replace(/:/, '')
+              const magnet = $(this).find('.dl-type.hs-magnet-link')
+                .find('a')
+                .attr('href')
+              const torrent = {
+                url: magnet,
+                seeds: 0,
+                peers: 0,
+                provider: 'HorribleSubs'
+              }
+              data.episodes[season][episode][quality] = torrent
+            })
           })
 
           page++
