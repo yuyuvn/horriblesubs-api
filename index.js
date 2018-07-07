@@ -358,7 +358,7 @@ module.exports = class HorribleSubsApi {
               data.episodes[season][episode] = {}
             }
 
-            entry.find(".rls-links-container").each(function(){
+            entry.find(".rls-links-container .rls-link").each(function(){
               const quality = $(this).find(".rls-link-label").text().trim().replace(/:/, '')
               const magnet = $(this).find('.dl-type.hs-magnet-link')
                 .find('a')
